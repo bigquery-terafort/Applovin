@@ -441,11 +441,11 @@ def fetch_max_revenue_daily():
     rows = []
     for r in fetch_csv(MAX_REPORT_URL, {"start":start,"end":end,
         "columns":"day,application,package_name,platform,impressions,estimated_revenue,ecpm,requests"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "impressions":safe_int(r.get("impressions")),
-            "estimated_revenue":safe_float(r.get("estimated_revenue")),
-            "ecpm":safe_float(r.get("ecpm")),"requests":safe_int(r.get("requests")),
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package_name"),"platform":r.get("Platform"),
+            "impressions":safe_int(r.get("Impressions")),
+            "estimated_revenue":safe_float(r.get("Estimated_revenue")),
+            "ecpm":safe_float(r.get("Ecpm")),"requests":safe_int(r.get("Requests")),
             "_ingested_at":now_ts()})
     return rows
 
@@ -455,11 +455,11 @@ def fetch_max_revenue_by_country():
     rows = []
     for r in fetch_csv(MAX_REPORT_URL, {"start":start,"end":end,
         "columns":"day,application,package_name,platform,country,impressions,estimated_revenue,ecpm"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "country":r.get("country"),"impressions":safe_int(r.get("impressions")),
-            "estimated_revenue":safe_float(r.get("estimated_revenue")),
-            "ecpm":safe_float(r.get("ecpm")),"_ingested_at":now_ts()})
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package_name"),"platform":r.get("Platform"),
+            "country":r.get("Country"),"impressions":safe_int(r.get("Impressions")),
+            "estimated_revenue":safe_float(r.get("Estimated_revenue")),
+            "ecpm":safe_float(r.get("Ecpm")),"_ingested_at":now_ts()})
     return rows
 
 def fetch_max_revenue_by_network():
@@ -468,11 +468,11 @@ def fetch_max_revenue_by_network():
     rows = []
     for r in fetch_csv(MAX_REPORT_URL, {"start":start,"end":end,
         "columns":"day,application,package_name,platform,network,impressions,estimated_revenue,ecpm"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "network":r.get("network"),"impressions":safe_int(r.get("impressions")),
-            "estimated_revenue":safe_float(r.get("estimated_revenue")),
-            "ecpm":safe_float(r.get("ecpm")),"_ingested_at":now_ts()})
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package_name"),"platform":r.get("Platform"),
+            "network":r.get("Network"),"impressions":safe_int(r.get("Impressions")),
+            "estimated_revenue":safe_float(r.get("Estimated_revenue")),
+            "ecpm":safe_float(r.get("Ecpm")),"_ingested_at":now_ts()})
     return rows
 
 def fetch_max_revenue_by_format():
@@ -481,11 +481,11 @@ def fetch_max_revenue_by_format():
     rows = []
     for r in fetch_csv(MAX_REPORT_URL, {"start":start,"end":end,
         "columns":"day,application,package_name,platform,ad_format,impressions,estimated_revenue,ecpm"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "ad_format":r.get("ad_format"),"impressions":safe_int(r.get("impressions")),
-            "estimated_revenue":safe_float(r.get("estimated_revenue")),
-            "ecpm":safe_float(r.get("ecpm")),"_ingested_at":now_ts()})
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package_name"),"platform":r.get("Platform"),
+            "ad_format":r.get("Ad_format"),"impressions":safe_int(r.get("Impressions")),
+            "estimated_revenue":safe_float(r.get("Estimated_revenue")),
+            "ecpm":safe_float(r.get("Ecpm")),"_ingested_at":now_ts()})
     return rows
 
 def fetch_max_revenue_by_device():
@@ -494,11 +494,11 @@ def fetch_max_revenue_by_device():
     rows = []
     for r in fetch_csv(MAX_REPORT_URL, {"start":start,"end":end,
         "columns":"day,application,package_name,platform,device_type,impressions,estimated_revenue,ecpm"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "device_type":r.get("device_type"),"impressions":safe_int(r.get("impressions")),
-            "estimated_revenue":safe_float(r.get("estimated_revenue")),
-            "ecpm":safe_float(r.get("ecpm")),"_ingested_at":now_ts()})
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package_name"),"platform":r.get("Platform"),
+            "device_type":r.get("Device_type"),"impressions":safe_int(r.get("Impressions")),
+            "estimated_revenue":safe_float(r.get("Estimated_revenue")),
+            "ecpm":safe_float(r.get("Ecpm")),"_ingested_at":now_ts()})
     return rows
 
 def fetch_max_revenue_by_hour():
@@ -508,24 +508,31 @@ def fetch_max_revenue_by_hour():
     rows = []
     for r in fetch_csv(MAX_REPORT_URL, {"start":start,"end":str(end),
         "columns":"day,hour,application,package_name,platform,impressions,estimated_revenue,ecpm"}):
-        rows.append({"date":r.get("day"),"hour":r.get("hour"),
-            "application":r.get("application"),"package_name":r.get("package_name"),
-            "platform":r.get("platform"),"impressions":safe_int(r.get("impressions")),
-            "estimated_revenue":safe_float(r.get("estimated_revenue")),
-            "ecpm":safe_float(r.get("ecpm")),"_ingested_at":now_ts()})
+        rows.append({"date":r.get("Day"),"hour":r.get("Hour"),
+            "application":r.get("Application"),"package_name":r.get("Package_name"),
+            "platform":r.get("Platform"),"impressions":safe_int(r.get("Impressions")),
+            "estimated_revenue":safe_float(r.get("Estimated_revenue")),
+            "ecpm":safe_float(r.get("Ecpm")),"_ingested_at":now_ts()})
     return rows
 
 def fetch_max_user_revenue():
     log.info("Fetching MAX User Revenue (android, yesterday)...")
     yesterday = str(datetime.utcnow().date() - timedelta(days=1))
     rows = []
-    for r in fetch_csv(MAX_USER_URL, {"date":yesterday,"platform":"android",
-        "columns":"application,package_name,country,network,ad_format,impressions,estimated_revenue"}):
-        rows.append({"date":yesterday,"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":"android",
-            "country":r.get("country"),"network":r.get("network"),
-            "ad_format":r.get("ad_format"),"impressions":safe_int(r.get("impressions")),
-            "estimated_revenue":safe_float(r.get("estimated_revenue")),
+    # User revenue API requires fetching aggregated data - no per-user breakdown without app_id
+    for r in fetch_csv(MAX_REPORT_URL, {
+        "start": yesterday, "end": yesterday,
+        "columns": "day,application,package_name,platform,country,network,ad_format,impressions,estimated_revenue",
+    }):
+        rows.append({"date":r.get("Day") or r.get("day"),
+            "application":r.get("Application") or r.get("application"),
+            "package_name":r.get("Package_name") or r.get("package_name"),
+            "platform":r.get("Platform") or r.get("platform"),
+            "country":r.get("Country") or r.get("country"),
+            "network":r.get("Network") or r.get("network"),
+            "ad_format":r.get("Ad_format") or r.get("ad_format"),
+            "impressions":safe_int(r.get("Impressions") or r.get("impressions")),
+            "estimated_revenue":safe_float(r.get("Estimated_revenue") or r.get("estimated_revenue")),
             "_ingested_at":now_ts()})
     return rows
 
@@ -626,7 +633,7 @@ def fetch_max_cohort_sessions():
 
 # ─── UA (ADVERTISER) ──────────────────────────────────────────────────────────
 def fetch_ua_campaigns_daily():
-    log.info("Fetching UA Campaigns Daily...")
+    log.info("Fetching UA Campaigns Daily (requires AppDiscovery to be active)...")
     start, end = date_range()
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {"start":start,"end":end,"report_type":"advertiser",
@@ -757,11 +764,11 @@ def fetch_pub_revenue_daily():
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {"start":start,"end":end,"report_type":"publisher",
         "columns":"day,application,package_name,platform,impressions,clicks,revenue,ecpm,ctr"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "impressions":safe_int(r.get("impressions")),"clicks":safe_int(r.get("clicks")),
-            "revenue":safe_float(r.get("revenue")),"ecpm":safe_float(r.get("ecpm")),
-            "ctr":safe_float(r.get("ctr")),"_ingested_at":now_ts()})
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package Name"),"platform":r.get("Platform"),
+            "impressions":safe_int(r.get("Impressions")),"clicks":safe_int(r.get("Clicks")),
+            "revenue":safe_float(r.get("Revenue")),"ecpm":safe_float(r.get("Ecpm")),
+            "ctr":safe_float(r.get("Ctr")),"_ingested_at":now_ts()})
     return rows
 
 def fetch_pub_revenue_by_country():
@@ -770,10 +777,10 @@ def fetch_pub_revenue_by_country():
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {"start":start,"end":end,"report_type":"publisher",
         "columns":"day,application,package_name,platform,country,impressions,revenue,ecpm"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "country":r.get("country"),"impressions":safe_int(r.get("impressions")),
-            "revenue":safe_float(r.get("revenue")),"ecpm":safe_float(r.get("ecpm")),
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package Name"),"platform":r.get("Platform"),
+            "country":r.get("Country"),"impressions":safe_int(r.get("Impressions")),
+            "revenue":safe_float(r.get("Revenue")),"ecpm":safe_float(r.get("Ecpm")),
             "_ingested_at":now_ts()})
     return rows
 
@@ -783,11 +790,11 @@ def fetch_pub_revenue_by_adtype():
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {"start":start,"end":end,"report_type":"publisher",
         "columns":"day,application,package_name,platform,ad_type,size,impressions,revenue,ecpm"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "ad_type":r.get("ad_type"),"size":r.get("size"),
-            "impressions":safe_int(r.get("impressions")),
-            "revenue":safe_float(r.get("revenue")),"ecpm":safe_float(r.get("ecpm")),
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package Name"),"platform":r.get("Platform"),
+            "ad_type":r.get("Ad_type"),"size":r.get("Size"),
+            "impressions":safe_int(r.get("Impressions")),
+            "revenue":safe_float(r.get("Revenue")),"ecpm":safe_float(r.get("Ecpm")),
             "_ingested_at":now_ts()})
     return rows
 
@@ -797,10 +804,10 @@ def fetch_pub_revenue_by_platform():
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {"start":start,"end":end,"report_type":"publisher",
         "columns":"day,application,package_name,platform,device_type,impressions,revenue,ecpm"}):
-        rows.append({"date":r.get("day"),"application":r.get("application"),
-            "package_name":r.get("package_name"),"platform":r.get("platform"),
-            "device_type":r.get("device_type"),"impressions":safe_int(r.get("impressions")),
-            "revenue":safe_float(r.get("revenue")),"ecpm":safe_float(r.get("ecpm")),
+        rows.append({"date":r.get("Day"),"application":r.get("Application"),
+            "package_name":r.get("Package Name"),"platform":r.get("Platform"),
+            "device_type":r.get("Device_type"),"impressions":safe_int(r.get("Impressions")),
+            "revenue":safe_float(r.get("Revenue")),"ecpm":safe_float(r.get("Ecpm")),
             "_ingested_at":now_ts()})
     return rows
 
