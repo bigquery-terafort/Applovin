@@ -293,7 +293,8 @@ def fetch_max_user_revenue():
     rows = []
     for r in fetch_csv(MAX_USER_URL, {
         "date": yesterday,
-        "columns": "application,package_name,platform,country,network,ad_format,impressions,estimated_revenue",
+        "platform": "android",
+        "columns": "application,package_name,country,network,ad_format,impressions,estimated_revenue",
     }):
         rows.append({"date":yesterday,"application":r.get("application"),
             "package_name":r.get("package_name"),"platform":r.get("platform"),
