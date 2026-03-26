@@ -217,9 +217,22 @@ def ensure_table(client, name):
 
 def load_to_bq(client, name, rows):
     if not rows: log.info(f"  No rows for {name}"); return
-    errors = client.insert_rows_json(f"{GCP_PROJECT}.{BQ_DATASET}.{name}", rows)
-    if errors: log.error(f"BQ errors [{name}]: {errors[:2]}")
-    else: log.info(f"  ✅ {len(rows):,} rows → {name}")
+    table_ref = f"{GCP_PROJECT}.{BQ_DATASET}.{name}"
+    BATCH_SIZE = 200  # small batches to avoid SSL timeout
+    total_errors = []
+    for i in range(0, len(rows), BATCH_SIZE):
+        batch = rows[i:i + BATCH_SIZE]
+        try:
+            errs = client.insert_rows_json(table_ref, batch)
+            if errs:
+                total_errors.extend(errs[:2])
+        except Exception as e:
+            log.error(f"  Batch {i}-{i+BATCH_SIZE} failed: {e}")
+            continue
+    if total_errors:
+        log.error(f"BQ errors [{name}]: {total_errors[:2]}")
+    else:
+        log.info(f"  ✅ {len(rows):,} rows → {name}")
 
 # ─── 1. MAX REVENUE DAILY ─────────────────────────────────────────────────────
 def fetch_max_revenue_daily():
