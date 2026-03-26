@@ -36,7 +36,7 @@ jobs:
           GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
           BQ_DATASET:           applovin_data
           LOOKBACK_DAYS:        ${{ github.event.inputs.lookback_days || '30' }}
-        run: python applovin_to_bigquery.py
+        run: python debug_columns.py
 
       - name: Notify on failure
         if: failure()
