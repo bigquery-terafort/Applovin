@@ -308,6 +308,7 @@ def fetch_max_user_revenue():
         "date": yesterday,
         "platform": "android",
         "columns": "application,package_name,country,network,ad_format,impressions,estimated_revenue",
+        # application is required as both a column and implicitly needed
     }):
         rows.append({"date":yesterday,"application":r.get("application"),
             "package_name":r.get("package_name"),"platform":r.get("platform"),
@@ -353,14 +354,14 @@ def fetch_ua_campaigns_daily():
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {
         "start": start, "end": end,
-        "columns": "day,campaign,application,platform,country,impressions,clicks,conversions,cost,ctr,conversion_rate,revenue",
+        "columns": "day,campaign,campaign_package_name,platform,country,impressions,clicks,conversions,cost,ctr,conversion_rate,revenue",
         "report_type": "advertiser",
     }):
         cost    = safe_float(r.get("cost")) or 0.0
         convs   = safe_int(r.get("conversions")) or 0
         revenue = safe_float(r.get("revenue")) or 0.0
         rows.append({"date":r.get("day"),"campaign":r.get("campaign"),
-            "application":r.get("application"),"platform":r.get("platform"),
+            "application":r.get("campaign_package_name"),"platform":r.get("platform"),
             "country":r.get("country"),"impressions":safe_int(r.get("impressions")),
             "clicks":safe_int(r.get("clicks")),"conversions":convs,"cost":cost,
             "ctr":safe_float(r.get("ctr")),
@@ -376,7 +377,7 @@ def fetch_ua_creatives_daily():
     start, end = date_range()
     rows = []
     for r in fetch_csv(UA_ASSET_URL, {
-        "start": start, "end": end,
+        "range": "last_7d",
         "columns": "asset_id,asset_name,campaign,impressions,clicks,cost,ctr",
     }):
         rows.append({"date":start,  # asset report uses range not daily breakdown
@@ -393,13 +394,13 @@ def fetch_ua_by_country():
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {
         "start": start, "end": end,
-        "columns": "day,campaign,application,country,impressions,clicks,conversions,cost",
+        "columns": "day,campaign,campaign_package_name,country,impressions,clicks,conversions,cost",
         "report_type": "advertiser",
     }):
         cost  = safe_float(r.get("cost")) or 0.0
         convs = safe_int(r.get("conversions")) or 0
         rows.append({"date":r.get("day"),"campaign":r.get("campaign"),
-            "application":r.get("application"),"country":r.get("country"),
+            "application":r.get("campaign_package_name"),"country":r.get("country"),
             "impressions":safe_int(r.get("impressions")),"clicks":safe_int(r.get("clicks")),
             "conversions":convs,"cost":cost,
             "cpi":round(cost/convs,4) if convs else None,
@@ -413,12 +414,12 @@ def fetch_ua_by_app():
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {
         "start": start, "end": end,
-        "columns": "day,application,platform,impressions,clicks,conversions,cost,revenue",
+        "columns": "day,campaign_package_name,platform,impressions,clicks,conversions,cost,revenue",
         "report_type": "advertiser",
     }):
         cost    = safe_float(r.get("cost")) or 0.0
         revenue = safe_float(r.get("revenue")) or 0.0
-        rows.append({"date":r.get("day"),"application":r.get("application"),
+        rows.append({"date":r.get("day"),"application":r.get("campaign_package_name"),
             "platform":r.get("platform"),"impressions":safe_int(r.get("impressions")),
             "clicks":safe_int(r.get("clicks")),"conversions":safe_int(r.get("conversions")),
             "cost":cost,"revenue":revenue,
