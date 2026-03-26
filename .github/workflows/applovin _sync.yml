@@ -1,1 +1,48 @@
+name: AppLovin → BigQuery Sync
 
+on:
+  schedule:
+    - cron: "0 4 * * *"   # Daily at 4am UTC (1hr after Facebook sync)
+  workflow_dispatch:
+    inputs:
+      lookback_days:
+        description: "Days of data to pull (default: 30)"
+        required: false
+        default: "30"
+
+jobs:
+  sync:
+    name: Sync AppLovin Data to BigQuery
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run AppLovin → BigQuery sync
+        env:
+          APPLOVIN_REPORT_KEY:  ${{ secrets.APPLOVIN_REPORT_KEY }}
+          GCP_PROJECT:          ${{ secrets.GCP_PROJECT }}
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+          BQ_DATASET:           applovin_data
+          LOOKBACK_DAYS:        ${{ github.event.inputs.lookback_days || '30' }}
+        run: python applovin_to_bigquery.py
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ AppLovin sync FAILED. Check logs above."
+          # Uncomment to add Slack alert:
+          # curl -X POST -H 'Content-type: application/json' \
+          #   --data '{"text":"AppLovin BQ sync failed!"}' \
+          #   ${{ secrets.SLACK_WEBHOOK_URL }}
