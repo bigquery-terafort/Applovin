@@ -363,10 +363,10 @@ def date_range():
     end = datetime.utcnow().date()
     return str(end - timedelta(days=LOOKBACK_DAYS)), str(end)
 
-# FIX v2: Extended to 90 days for proper D45 cohort coverage
+# AppLovin cohort API only allows 45 day lookback — cap at 44 days
 def cohort_range():
     end = datetime.utcnow().date()
-    return str(end - timedelta(days=90)), str(end)
+    return str(end - timedelta(days=44)), str(end)
 
 def fetch_csv(url, params):
     params["api_key"] = APPLOVIN_REPORT_KEY
@@ -618,9 +618,11 @@ def fetch_max_user_revenue():
     rows = []
     # MAX User Revenue API requires explicit platform parameter
     # Call separately for android and ios then combine
+    # MAX_USER_URL requires 'date' param (single day), not start/end
+    yesterday = str(datetime.utcnow().date() - timedelta(days=1))
     for platform in ["android", "ios"]:
         raw = fetch_csv(MAX_USER_URL, {
-            "start": start, "end": end,
+            "date": yesterday,
             "platform": platform,
             "columns": "day,application,package_name,platform,country,network,ad_format,impressions,estimated_revenue"
         })
@@ -712,90 +714,16 @@ def fetch_max_cohort_revenue():
     return rows
 
 def fetch_max_cohort_impressions():
-    log.info("Fetching MAX Cohort Impressions...")
-    start, end = cohort_range()
-    rows = []
-    # FIX v2: Use MAX_COHORT_URL (not /imp suffix)
-    for r in fetch_csv(MAX_COHORT_URL, {
-        "start": start, "end": end,
-        "columns": (
-            "day,application,package_name,platform,country,installs,"
-            "imp_0,imp_1,imp_3,imp_7,imp_14,imp_30,imp_45,"
-            "imp_per_user_0,imp_per_user_1,imp_per_user_7,imp_per_user_30,"
-            "inter_imp_7,reward_imp_7,banner_imp_7,"
-            "user_count_0,user_count_1,user_count_7,user_count_30"
-        )
-    }):
-        rows.append({
-            "day":              r.get("day"),
-            "application":      r.get("application"),
-            "package_name":     r.get("package_name"),
-            "platform":         r.get("platform"),
-            "country":          r.get("country"),
-            "installs":         safe_int(r.get("installs")),
-            "imp_0":            safe_int(r.get("imp_0")),
-            "imp_1":            safe_int(r.get("imp_1")),
-            "imp_3":            safe_int(r.get("imp_3")),
-            "imp_7":            safe_int(r.get("imp_7")),
-            "imp_14":           safe_int(r.get("imp_14")),
-            "imp_30":           safe_int(r.get("imp_30")),
-            "imp_45":           safe_int(r.get("imp_45")),
-            "imp_per_user_0":   safe_float(r.get("imp_per_user_0")),
-            "imp_per_user_1":   safe_float(r.get("imp_per_user_1")),
-            "imp_per_user_7":   safe_float(r.get("imp_per_user_7")),
-            "imp_per_user_30":  safe_float(r.get("imp_per_user_30")),
-            "inter_imp_7":      safe_int(r.get("inter_imp_7")),
-            "reward_imp_7":     safe_int(r.get("reward_imp_7")),
-            "banner_imp_7":     safe_int(r.get("banner_imp_7")),
-            "user_count_0":     safe_int(r.get("user_count_0")),
-            "user_count_1":     safe_int(r.get("user_count_1")),
-            "user_count_7":     safe_int(r.get("user_count_7")),
-            "user_count_30":    safe_int(r.get("user_count_30")),
-            "_ingested_at":     now_ts(),
-        })
-    return rows
+    # AppLovin cohort API does NOT support impression columns
+    # (imp_0, imp_1, user_count etc are not available via /maxCohort endpoint)
+    log.info("Fetching MAX Cohort Impressions — skipped (columns not supported by API)")
+    return []
 
 def fetch_max_cohort_sessions():
-    log.info("Fetching MAX Cohort Sessions...")
-    start, end = cohort_range()
-    rows = []
-    # FIX v2: Use MAX_COHORT_URL (not /session suffix)
-    for r in fetch_csv(MAX_COHORT_URL, {
-        "start": start, "end": end,
-        "columns": (
-            "day,application,package_name,platform,country,installs,"
-            "retention_1,retention_3,retention_7,retention_14,retention_30,"
-            "session_count_0,session_count_1,session_count_7,session_count_30,"
-            "daily_usage_0,daily_usage_1,daily_usage_7,daily_usage_30,"
-            "user_count_1,user_count_7,user_count_30"
-        )
-    }):
-        rows.append({
-            "day":              r.get("day"),
-            "application":      r.get("application"),
-            "package_name":     r.get("package_name"),
-            "platform":         r.get("platform"),
-            "country":          r.get("country"),
-            "installs":         safe_int(r.get("installs")),
-            "retention_1":      safe_float(r.get("retention_1")),
-            "retention_3":      safe_float(r.get("retention_3")),
-            "retention_7":      safe_float(r.get("retention_7")),
-            "retention_14":     safe_float(r.get("retention_14")),
-            "retention_30":     safe_float(r.get("retention_30")),
-            "session_count_0":  safe_int(r.get("session_count_0")),
-            "session_count_1":  safe_int(r.get("session_count_1")),
-            "session_count_7":  safe_int(r.get("session_count_7")),
-            "session_count_30": safe_int(r.get("session_count_30")),
-            "daily_usage_0":    safe_float(r.get("daily_usage_0")),
-            "daily_usage_1":    safe_float(r.get("daily_usage_1")),
-            "daily_usage_7":    safe_float(r.get("daily_usage_7")),
-            "daily_usage_30":   safe_float(r.get("daily_usage_30")),
-            "user_count_1":     safe_int(r.get("user_count_1")),
-            "user_count_7":     safe_int(r.get("user_count_7")),
-            "user_count_30":    safe_int(r.get("user_count_30")),
-            "_ingested_at":     now_ts(),
-        })
-    return rows
+    # AppLovin cohort API does NOT support session/retention columns
+    # (retention_1, session_count etc are not available via /maxCohort endpoint)
+    log.info("Fetching MAX Cohort Sessions — skipped (columns not supported by API)")
+    return []
 
 # ─── UA (ADVERTISER) ─────────────────────────────────────────────────────────
 # UA Report API returns lowercase headers: day, campaign, campaign_package_name etc.
