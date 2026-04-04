@@ -808,7 +808,7 @@ def fetch_ua_campaigns_daily():
         "start": start, "end": end, "report_type": "advertiser",
         "columns": (
             "day,campaign,campaign_id_external,campaign_package_name,campaign_type,"
-            "platform,country,impressions,clicks,conversions,cost,revenue,"
+            "platform,country,impressions,clicks,conversions,cost,"
             "roas_0d,roas_1d,roas_3d,roas_7d,roas_14d,roas_30d,"
             "iap_roas_7d,iap_roas_30d,ad_roas_7d,ad_roas_30d,"
             "iap_rev_7d,iap_rev_30d,ad_rev_7d,ad_rev_30d,total_rev_7d,total_rev_30d,"
@@ -947,11 +947,11 @@ def fetch_ua_by_app():
     rows = []
     for r in fetch_csv(UA_REPORT_URL, {
         "start": start, "end": end, "report_type": "advertiser",
-        "columns": "day,campaign_package_name,platform,impressions,clicks,conversions,cost,revenue,roas_7d,roas_30d,total_rev_7d,total_rev_30d"
+        "columns": "day,campaign_package_name,platform,impressions,clicks,conversions,cost,roas_7d,roas_30d,total_rev_7d,total_rev_30d"
     }):
         cost  = safe_float(r.get("cost")) or 0.0
-        # FIX: Use actual revenue column, not total_rev_7d
-        rev   = safe_float(r.get("revenue")) or 0.0
+        # revenue not available in advertiser API — use total_rev_7d as best proxy
+        rev   = safe_float(r.get("total_rev_7d")) or 0.0
         rows.append({
             "date":                     r.get("day"),
             "campaign_package_name":    r.get("campaign_package_name"),
@@ -977,18 +977,12 @@ def fetch_ua_creatives_daily():
     log.info("Fetching UA Creatives (Asset Report)...")
     start, end = date_range()
     rows = []
-    # Try start/end first; asset report API may only support range param
-    # FIX: try start/end, fallback to range=last_7d if empty
+    # Asset report ONLY supports range parameter: yesterday, last_7d, last_month
+    # Does NOT support start/end date params
     raw = fetch_csv(UA_ASSET_URL, {
-        "start": start, "end": end,
+        "range": "last_7d",
         "columns": "asset_id,asset_name,campaign,impressions,clicks,cost,ctr"
     })
-    if not raw:
-        log.info("  start/end returned empty — trying range=last_7d")
-        raw = fetch_csv(UA_ASSET_URL, {
-            "range": "last_7d",
-            "columns": "asset_id,asset_name,campaign,impressions,clicks,cost,ctr"
-        })
     for r in raw:
         imps   = safe_int(r.get("impressions")) or 0
         clicks = safe_int(r.get("clicks")) or 0
