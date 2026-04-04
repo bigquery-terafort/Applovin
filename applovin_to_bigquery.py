@@ -592,7 +592,7 @@ def fetch_max_revenue_by_hour():
     log.info("Fetching MAX Revenue by Hour...")
     # FIX: AppLovin only keeps hourly data for 30 days — cap lookback
     end = datetime.utcnow().date()
-    hour_lookback = min(LOOKBACK_DAYS, 30)
+    hour_lookback = min(LOOKBACK_DAYS, 29)  # API only supports up to 29 days back
     start = str(end - timedelta(days=hour_lookback))
     end = str(end)
     rows = []
@@ -613,37 +613,57 @@ def fetch_max_revenue_by_hour():
         })
     return rows
 
-# FIX v2: Now properly uses MAX_USER_URL endpoint
+# FIX v2: MAX_USER_URL requires platform=android or platform=ios separately
 def fetch_max_user_revenue():
     log.info("Fetching MAX User Revenue...")
     start, end = date_range()
     rows = []
-    # MAX User Revenue API — requires date range, returns per-user ad revenue
-    # Falls back to MAX_REPORT_URL with country+network+ad_format if user endpoint fails
-    raw = fetch_csv(MAX_USER_URL, {
-        "start": start, "end": end,
-        "columns": "day,application,package_name,platform,country,network,ad_format,impressions,estimated_revenue"
-    })
-    if not raw:
-        log.info("  MAX_USER_URL returned empty — falling back to MAX_REPORT_URL breakdown")
-        raw = fetch_csv(MAX_REPORT_URL, {
+    # MAX User Revenue API requires explicit platform parameter
+    # Call separately for android and ios then combine
+    for platform in ["android", "ios"]:
+        raw = fetch_csv(MAX_USER_URL, {
             "start": start, "end": end,
+            "platform": platform,
             "columns": "day,application,package_name,platform,country,network,ad_format,impressions,estimated_revenue"
         })
-    for r in raw:
-        # Handle both title-case (MAX_REPORT_URL) and lowercase (MAX_USER_URL) headers
-        rows.append({
-            "date":               r.get("Day") or r.get("day"),
-            "application":        r.get("Application") or r.get("application"),
-            "package_name":       r.get("Package_name") or r.get("package_name"),
-            "platform":           r.get("Platform") or r.get("platform"),
-            "country":            r.get("Country") or r.get("country"),
-            "network":            r.get("Network") or r.get("network"),
-            "ad_format":          r.get("Ad_format") or r.get("ad_format"),
-            "impressions":        safe_int(r.get("Impressions") or r.get("impressions")),
-            "estimated_revenue":  safe_float(r.get("Estimated_revenue") or r.get("estimated_revenue")),
-            "_ingested_at":       now_ts(),
-        })
+        if raw:
+            log.info(f"  Got {len(raw)} rows for platform={platform}")
+            for r in raw:
+                # MAX_USER_URL returns lowercase headers
+                rows.append({
+                    "date":               r.get("day"),
+                    "application":        r.get("application"),
+                    "package_name":       r.get("package_name"),
+                    "platform":           r.get("platform") or platform,
+                    "country":            r.get("country"),
+                    "network":            r.get("network"),
+                    "ad_format":          r.get("ad_format"),
+                    "impressions":        safe_int(r.get("impressions")),
+                    "estimated_revenue":  safe_float(r.get("estimated_revenue")),
+                    "_ingested_at":       now_ts(),
+                })
+        else:
+            log.info(f"  No data for platform={platform} — trying MAX_REPORT_URL fallback")
+            # Fallback: use MAX_REPORT_URL with platform filter
+            raw_fallback = fetch_csv(MAX_REPORT_URL, {
+                "start": start, "end": end,
+                "columns": "day,application,package_name,platform,country,network,ad_format,impressions,estimated_revenue"
+            })
+            for r in raw_fallback:
+                if r.get("Platform", "").lower() == platform:
+                    rows.append({
+                        "date":               r.get("Day"),
+                        "application":        r.get("Application"),
+                        "package_name":       r.get("Package_name"),
+                        "platform":           r.get("Platform"),
+                        "country":            r.get("Country"),
+                        "network":            r.get("Network"),
+                        "ad_format":          r.get("Ad_format"),
+                        "impressions":        safe_int(r.get("Impressions")),
+                        "estimated_revenue":  safe_float(r.get("Estimated_revenue")),
+                        "_ingested_at":       now_ts(),
+                    })
+    log.info(f"  Total max_user_revenue rows: {len(rows)}")
     return rows
 
 # ─── MAX COHORT ──────────────────────────────────────────────────────────────
