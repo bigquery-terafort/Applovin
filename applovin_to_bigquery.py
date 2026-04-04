@@ -410,7 +410,9 @@ def ensure_table(client, name):
         log.info(f"Creating table {name}")
         client.create_table(bigquery.Table(ref, schema=SCHEMAS[name]))
 
-# FIX v2: Delete-before-insert — no duplicates on re-runs
+# FIXED: Use batch load jobs instead of streaming inserts
+# Batch load jobs go directly to permanent storage — DELETE works immediately after
+# Streaming inserts (insert_rows_json) block DELETE for ~90 minutes (streaming buffer)
 def load_to_bq(client, name, rows):
     global FAILED_TABLES
     if not rows:
@@ -420,7 +422,6 @@ def load_to_bq(client, name, rows):
     table_ref = f"{GCP_PROJECT}.{BQ_DATASET}.{name}"
     start, end = date_range()
 
-    # Determine date column for delete-before-insert
     date_col_map = {
         "max_revenue_daily":        "date",
         "max_revenue_by_country":   "date",
@@ -442,6 +443,7 @@ def load_to_bq(client, name, rows):
     }
     cohort_tables = {"max_cohort_revenue", "max_cohort_impressions", "max_cohort_sessions"}
 
+    # Step 1: Delete existing rows for this date range
     date_col = date_col_map.get(name)
     if date_col:
         try:
@@ -452,7 +454,6 @@ def load_to_bq(client, name, rows):
         except Exception as e:
             log.warning(f"  Could not clear {name}: {e}")
     elif name in cohort_tables:
-        # Cohort tables use 'day' column with 90-day range
         c_start, c_end = cohort_range()
         try:
             client.query(
@@ -462,23 +463,20 @@ def load_to_bq(client, name, rows):
         except Exception as e:
             log.warning(f"  Could not clear {name}: {e}")
 
-    # Insert in batches
-    BATCH_SIZE = 200
-    total_errors = []
-    for i in range(0, len(rows), BATCH_SIZE):
-        batch = rows[i:i + BATCH_SIZE]
-        try:
-            errs = client.insert_rows_json(table_ref, batch)
-            if errs:
-                total_errors.extend(errs[:2])
-        except Exception as e:
-            log.error(f"  Batch {i} failed: {e}")
-
-    if total_errors:
-        log.error(f"BQ errors [{name}]: {total_errors[:2]}")
-        FAILED_TABLES.append(name)
-    else:
+    # Step 2: Load using batch load job (NOT streaming insert)
+    # load_table_from_json uses BigQuery Load Jobs which bypass the streaming buffer
+    # This means DELETE works immediately on the next run without waiting 90 minutes
+    try:
+        job_config = bigquery.LoadJobConfig(
+            schema=SCHEMAS[name],
+            write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
+        )
+        load_job = client.load_table_from_json(rows, table_ref, job_config=job_config)
+        load_job.result()  # Wait for job to complete
         log.info(f"  ✅ {len(rows):,} rows → {name}")
+    except Exception as e:
+        log.error(f"  Load job failed [{name}]: {e}")
+        FAILED_TABLES.append(name)
 
 # ─── MAX REVENUE ─────────────────────────────────────────────────────────────
 # MAX Report API returns title-case CSV headers: Day, Application, Package_name etc.
