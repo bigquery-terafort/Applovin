@@ -999,17 +999,18 @@ def fetch_pub_revenue_daily():
         "start": start, "end": end, "report_type": "publisher",
         "columns": "day,application,package_name,platform,impressions,clicks,revenue,ecpm,ctr"
     }):
-        imps  = safe_int(r.get("impressions")) or 0
-        clicks = safe_int(r.get("clicks")) or 0
+        # Publisher API returns title-case headers with "Package Name" (space not underscore)
+        imps   = safe_int(r.get("Impressions")) or 0
+        clicks = safe_int(r.get("Clicks")) or 0
         rows.append({
-            "date":         r.get("day"),
-            "application":  r.get("application"),
-            "package_name": r.get("package_name"),
-            "platform":     r.get("platform"),
+            "date":         r.get("Day"),
+            "application":  r.get("Application"),
+            "package_name": r.get("Package Name"),
+            "platform":     r.get("Platform"),
             "impressions":  imps,
             "clicks":       clicks,
-            "revenue":      safe_float(r.get("revenue")),
-            "ecpm":         safe_float(r.get("ecpm")),
+            "revenue":      safe_float(r.get("Revenue")),
+            "ecpm":         safe_float(r.get("Ecpm")),
             "ctr":          round(clicks / imps, 6) if imps else None,
             "_ingested_at": now_ts(),
         })
@@ -1024,14 +1025,14 @@ def fetch_pub_revenue_by_country():
         "columns": "day,application,package_name,platform,country,impressions,revenue,ecpm"
     }):
         rows.append({
-            "date":         r.get("day"),
-            "application":  r.get("application"),
-            "package_name": r.get("package_name"),
-            "platform":     r.get("platform"),
-            "country":      r.get("country"),
-            "impressions":  safe_int(r.get("impressions")),
-            "revenue":      safe_float(r.get("revenue")),
-            "ecpm":         safe_float(r.get("ecpm")),
+            "date":         r.get("Day"),
+            "application":  r.get("Application"),
+            "package_name": r.get("Package Name"),
+            "platform":     r.get("Platform"),
+            "country":      r.get("Country"),
+            "impressions":  safe_int(r.get("Impressions")),
+            "revenue":      safe_float(r.get("Revenue")),
+            "ecpm":         safe_float(r.get("Ecpm")),
             "_ingested_at": now_ts(),
         })
     return rows
@@ -1044,16 +1045,17 @@ def fetch_pub_revenue_by_adtype():
         "start": start, "end": end, "report_type": "publisher",
         "columns": "day,application,package_name,platform,ad_type,size,impressions,revenue,ecpm"
     }):
+        # Headers: Day, Application, Package Name, Platform, Ad_type, Size, Impressions, Revenue
         rows.append({
-            "date":         r.get("day"),
-            "application":  r.get("application"),
-            "package_name": r.get("package_name"),
-            "platform":     r.get("platform"),
-            "ad_type":      r.get("ad_type"),
-            "size":         r.get("size"),
-            "impressions":  safe_int(r.get("impressions")),
-            "revenue":      safe_float(r.get("revenue")),
-            "ecpm":         safe_float(r.get("ecpm")),
+            "date":         r.get("Day"),
+            "application":  r.get("Application"),
+            "package_name": r.get("Package Name"),
+            "platform":     r.get("Platform"),
+            "ad_type":      r.get("Ad_type"),
+            "size":         r.get("Size"),
+            "impressions":  safe_int(r.get("Impressions")),
+            "revenue":      safe_float(r.get("Revenue")),
+            "ecpm":         safe_float(r.get("Ecpm")),
             "_ingested_at": now_ts(),
         })
     return rows
@@ -1066,15 +1068,16 @@ def fetch_pub_revenue_by_platform():
         "start": start, "end": end, "report_type": "publisher",
         "columns": "day,application,package_name,platform,device_type,impressions,revenue,ecpm"
     }):
+        # Headers: Day, Application, Package Name, Platform, Device_type, Impressions, Revenue, Ecpm
         rows.append({
-            "date":         r.get("day"),
-            "application":  r.get("application"),
-            "package_name": r.get("package_name"),
-            "platform":     r.get("platform"),
-            "device_type":  r.get("device_type"),
-            "impressions":  safe_int(r.get("impressions")),
-            "revenue":      safe_float(r.get("revenue")),
-            "ecpm":         safe_float(r.get("ecpm")),
+            "date":         r.get("Day"),
+            "application":  r.get("Application"),
+            "package_name": r.get("Package Name"),
+            "platform":     r.get("Platform"),
+            "device_type":  r.get("Device_type"),
+            "impressions":  safe_int(r.get("Impressions")),
+            "revenue":      safe_float(r.get("Revenue")),
+            "ecpm":         safe_float(r.get("Ecpm")),
             "_ingested_at": now_ts(),
         })
     return rows
