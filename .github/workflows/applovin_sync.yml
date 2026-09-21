@@ -58,13 +58,17 @@ jobs:
       # ══════════════════════════════════════════════════════════════════════
       # 🩺 SELF-HEAL ① — PEHLE ki haalat yaad rakho (rollback/verify ke liye)
       # ══════════════════════════════════════════════════════════════════════
+      # 🔑 MULTI-TABLE: ye loader 4+ tables likhta hai. Skip SIRF tab jab SAB
+      #    ahem tables par kal ka data ho — LEAST(...) sab se PURANI table deta hai.
+      #    (21-Sep: Adjust app_daily taaza thi, campaign/country 3 din purani —
+      #     heal ne skip kar diya. Mintegral mein bhi yehi. Ab nahi.)
       - name: "🩺 Pehle ki haalat — rows aur aakhri din"
         id: before
         continue-on-error: true
         run: |
           set +e
           R=$(bq query --nouse_legacy_sql --format=csv --quiet \
-            "SELECT COUNT(*), CAST(MAX(date) AS STRING) FROM \`terafort.applovin_data.max_revenue_by_network\`" 2>/dev/null | tail -1)
+            "SELECT (SELECT COUNT(*) FROM \`terafort.applovin_data.max_revenue_by_network\`), CAST(LEAST((SELECT MAX(date) FROM \`terafort.applovin_data.max_revenue_by_network\`), (SELECT MAX(date) FROM \`terafort.applovin_data.max_revenue_daily\`), (SELECT MAX(date) FROM \`terafort.applovin_data.max_revenue_by_country\`), (SELECT MAX(date) FROM \`terafort.applovin_data.pub_revenue_daily\`)) AS STRING)" 2>/dev/null | tail -1)
           ROWS=$(echo "$R" | cut -d, -f1); LAST=$(echo "$R" | cut -d, -f2)
           echo "📊 pehle: ${ROWS:-?} rows · aakhri din ${LAST:-?}"
           echo "rows=${ROWS:-0}" >> "$GITHUB_OUTPUT"
